@@ -14,17 +14,34 @@ function Character.init(services)
 	S = services
 end
 
-local function spawnCFrame(name: string): CFrame?
+local function spawnCFrame(name: string, height: number?): CFrame?
 	local map = workspace:FindFirstChild("Map")
 	local spawns = map and map:FindFirstChild("Spawns")
 	local spot = spawns and spawns:FindFirstChild(name)
 	if spot and spot:IsA("BasePart") then
-		local jitter = Vector3.new(math.random(-20, 20) / 10, 3, math.random(-20, 20) / 10)
+		local jitter = Vector3.new(math.random(-20, 20) / 10, height or 3, math.random(-20, 20) / 10)
 		return CFrame.new(spot.Position + jitter) * (spot.CFrame - spot.Position)
 	end
 	return nil
 end
 Character.spawnCFrame = spawnCFrame
+
+-- Let Roblox finish putting the avatar's look on before we replace it
+-- (avoids "compose decal failed: Missing Head" warnings).
+local function waitForAppearance(player: Player, timeout: number)
+	if player:HasAppearanceLoaded() then
+		return
+	end
+	local done = false
+	local conn = player.CharacterAppearanceLoaded:Connect(function()
+		done = true
+	end)
+	local t0 = os.clock()
+	while not done and os.clock() - t0 < timeout do
+		task.wait(0.05)
+	end
+	conn:Disconnect()
+end
 
 function Character.setup(player: Player, char: Model)
 	if char:GetAttribute("SetupDone") then
@@ -41,11 +58,22 @@ function Character.setup(player: Player, char: Model)
 	-- Rats: swap the avatar for the rigged rat body (RatRig). Setting player.Character
 	-- fires CharacterAdded again, which runs setup on the rat itself.
 	if st.inMatch and st.side == "Rat" and not char:GetAttribute("IsRat") then
+		waitForAppearance(player, 2)
+		if player.Character ~= char then
+			return
+		end
 		local rat = S.RatRig.build(player)
-		rat:PivotTo(spawnCFrame("RatSpawn") or char:GetPivot())
-		rat.Parent = workspace
+		pcall(function()
+			rat.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
+		end)
+		rat:PivotTo(spawnCFrame("RatSpawn", 1.2) or char:GetPivot())
 		player.Character = rat
-		char:Destroy()
+		rat.Parent = workspace
+		task.defer(function()
+			if char.Parent then
+				char:Destroy()
+			end
+		end)
 		local ratRoot = rat:FindFirstChild("HumanoidRootPart") :: BasePart
 		pcall(function()
 			ratRoot:SetNetworkOwner(player)

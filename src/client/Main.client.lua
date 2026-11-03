@@ -15,6 +15,25 @@ Effects.init(UI)
 Effects.start()
 RatAnimator.start()
 
+-- When the server swaps our avatar for the rat body, point the camera at it.
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local function followCharacter(char: Model?)
+	if not char then
+		return
+	end
+	local hum = char:WaitForChild("Humanoid", 10)
+	if hum and localPlayer.Character == char then
+		local cam = workspace.CurrentCamera
+		cam.CameraType = Enum.CameraType.Custom
+		cam.CameraSubject = hum
+	end
+end
+localPlayer:GetPropertyChangedSignal("Character"):Connect(function()
+	task.spawn(followCharacter, localPlayer.Character)
+end)
+task.spawn(followCharacter, localPlayer.Character)
+
 Remotes.StateChanged.OnClientEvent:Connect(function(state)
 	UI.updateState(state)
 end)

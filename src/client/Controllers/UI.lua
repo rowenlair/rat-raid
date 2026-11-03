@@ -176,7 +176,7 @@ end
 ----------------------------------------------------------------------
 local function buildHud()
 	-- Top center: phase + timer + food + lives
-	local top = new("Frame", { Name = "Top", Size = UDim2.new(0, 460, 0, 120), Position = UDim2.new(0.5, 0, 0, 8),
+	local top = new("Frame", { Name = "Top", Size = UDim2.new(0, 460, 0, 120), Position = UDim2.new(0.5, 0, 0, 58),
 		AnchorPoint = Vector2.new(0.5, 0), BackgroundTransparency = 1, Parent = gui })
 	refs.phase = text({ Text = "", Size = UDim2.new(1, 0, 0, 34), Parent = top })
 	refs.timer = text({ Text = "", Size = UDim2.new(1, 0, 0, 30), Position = UDim2.new(0, 0, 0, 34),
@@ -220,7 +220,7 @@ local function buildHud()
 		ZIndex = 40, Parent = gui })
 
 	-- Toasts
-	refs.toasts = new("Frame", { Size = UDim2.new(0, 520, 0, 260), Position = UDim2.new(0.5, 0, 0, 135),
+	refs.toasts = new("Frame", { Size = UDim2.new(0, 520, 0, 260), Position = UDim2.new(0.5, 0, 0, 185),
 		AnchorPoint = Vector2.new(0.5, 0), BackgroundTransparency = 1, Parent = gui },
 		{ new("UIListLayout", { HorizontalAlignment = Enum.HorizontalAlignment.Center, Padding = UDim.new(0, 4),
 			SortOrder = Enum.SortOrder.LayoutOrder }) })
