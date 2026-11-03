@@ -1,0 +1,51 @@
+{
+  "name": "Rat Raid",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": { "$path": "src/shared" },
+      "Remotes": {
+        "$className": "Folder",
+        "StateChanged":   { "$className": "RemoteEvent" },
+        "Notify":         { "$className": "RemoteEvent" },
+        "Action":         { "$className": "RemoteEvent" },
+        "Effect":         { "$className": "RemoteEvent" },
+        "ProfileUpdated": { "$className": "RemoteEvent" },
+        "ShopBuy":        { "$className": "RemoteFunction" },
+        "GetProfile":     { "$className": "RemoteFunction" }
+      }
+    },
+    "ServerScriptService": {
+      "Server": { "$path": "src/server" }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Client": { "$path": "src/client" }
+      }
+    },
+    "Teams": {
+      "$className": "Teams",
+      "Rats": {
+        "$className": "Team",
+        "$properties": { "TeamColor": { "BrickColor": 194 }, "AutoAssignable": false }
+      },
+      "Homeowners": {
+        "$className": "Team",
+        "$properties": { "TeamColor": { "BrickColor": 106 }, "AutoAssignable": false }
+      }
+    },
+    "Lighting": {
+      "$properties": {
+        "ClockTime": 14,
+        "Brightness": 2.5,
+        "Ambient": [0.45, 0.45, 0.5],
+        "OutdoorAmbient": [0.6, 0.6, 0.65],
+        "GlobalShadows": true
+      }
+    },
+    "Workspace": {
+      "$properties": { "Gravity": 196.2 },
+      "Map": { "$path": "map/Map.model.json" }
+    }
+  }
+}
