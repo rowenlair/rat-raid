@@ -26,6 +26,19 @@ local match = {
 }
 Round.match = match
 
+-- Respawn helper: prefers the newer LoadCharacterAsync, falls back to LoadCharacter.
+local function respawn(player: Player)
+	local ok = pcall(function()
+		(player :: any):LoadCharacterAsync()
+	end)
+	if not ok and player.Parent then
+		pcall(function()
+			player:LoadCharacter()
+		end)
+	end
+end
+Round.respawn = respawn
+
 function Round.init(services)
 	S = services
 end
@@ -234,7 +247,7 @@ local function beginMatch()
 			p.Neutral = false
 			S.Data.addStat(p, "games", 1)
 			task.spawn(function()
-				p:LoadCharacter()
+				respawn(p)
 			end)
 		end
 	end
@@ -277,7 +290,7 @@ local function cleanupToLobby()
 		p.Neutral = true
 		if wasInMatch then
 			task.spawn(function()
-				p:LoadCharacter()
+				respawn(p)
 			end)
 		end
 		S.Data.save(p)
@@ -332,6 +345,13 @@ function Round.onDied(player: Player)
 	if st.side ~= "Rat" then
 		return
 	end
+	-- Safety net: make sure a dead rat body always respawns.
+	local deadChar = player.Character
+	task.delay(Players.RespawnTime + 1.5, function()
+		if player.Parent and player.Character == deadChar then
+			respawn(player)
+		end
+	end)
 	st.caged = false
 	match.lives -= 1
 

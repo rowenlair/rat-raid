@@ -9,6 +9,7 @@ local S = {
 	State = require(ServicesFolder.State),
 	Data = require(ServicesFolder.Data),
 	Character = require(ServicesFolder.Character),
+	RatRig = require(ServicesFolder.RatRig),
 	Round = require(ServicesFolder.Round),
 	Food = require(ServicesFolder.Food),
 	Combat = require(ServicesFolder.Combat),

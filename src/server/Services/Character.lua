@@ -9,8 +9,6 @@ local Stats = require(Shared.Stats)
 local Character = {}
 local S
 
-local RAT_GREY = Color3.fromRGB(125, 120, 118)
-local RAT_PINK = Color3.fromRGB(255, 165, 180)
 
 function Character.init(services)
 	S = services
@@ -28,95 +26,11 @@ local function spawnCFrame(name: string): CFrame?
 end
 Character.spawnCFrame = spawnCFrame
 
-local function waitForAppearance(player: Player, timeout: number)
-	if player:HasAppearanceLoaded() then
-		return
-	end
-	local done = false
-	local conn = player.CharacterAppearanceLoaded:Connect(function()
-		done = true
-	end)
-	local t0 = os.clock()
-	while not done and os.clock() - t0 < timeout do
-		task.wait(0.1)
-	end
-	conn:Disconnect()
-end
-
-local function cosmetic(name, size, color, cframe, shape, parent, weldTo)
-	local p = Instance.new("Part")
-	p.Name = name
-	p.Shape = shape or Enum.PartType.Block
-	p.Size = size
-	p.Color = color
-	p.Material = Enum.Material.SmoothPlastic
-	p.CanCollide = false
-	p.CanTouch = false
-	p.CanQuery = false
-	p.Massless = true
-	p.CFrame = cframe
-	p.Parent = parent
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0 = weldTo
-	weld.Part1 = p
-	weld.Parent = p
-	return p
-end
-
--- Turns a normal avatar into a placeholder rat. Swap this out for a custom
--- rat model later (see README: "Replacing the placeholder rat").
-function Character.applyRatLook(player: Player, char: Model)
-	waitForAppearance(player, 3)
-	if not char.Parent then
-		return
-	end
-
-	local function strip(inst)
-		if inst:IsA("Accessory") or inst:IsA("Shirt") or inst:IsA("Pants") or inst:IsA("ShirtGraphic") then
-			inst:Destroy()
-		end
-	end
-	for _, child in ipairs(char:GetChildren()) do
-		strip(child)
-	end
-	char.ChildAdded:Connect(function(child)
-		task.defer(strip, child)
-	end)
-
-	local bodyColors = char:FindFirstChildOfClass("BodyColors")
-	if bodyColors then
-		bodyColors.HeadColor3 = RAT_GREY
-		bodyColors.TorsoColor3 = RAT_GREY
-		bodyColors.LeftArmColor3 = RAT_PINK
-		bodyColors.RightArmColor3 = RAT_PINK
-		bodyColors.LeftLegColor3 = RAT_GREY
-		bodyColors.RightLegColor3 = RAT_GREY
-	end
-
-	char:ScaleTo(Config.RAT_SCALE)
-
-	local head = char:FindFirstChild("Head")
-	local torso = char:FindFirstChild("LowerTorso") or char:FindFirstChild("Torso")
-	if head and head:IsA("BasePart") then
-		local hs = head.Size.Y
-		for _, sideSign in ipairs({ -1, 1 }) do
-			cosmetic("RatEar", Vector3.new(hs * 0.15, hs * 0.85, hs * 0.85), RAT_PINK,
-				head.CFrame * CFrame.new(sideSign * hs * 0.5, hs * 0.6, 0) * CFrame.Angles(0, math.rad(90), 0),
-				Enum.PartType.Cylinder, char, head)
-		end
-		cosmetic("RatNose", Vector3.new(hs * 0.25, hs * 0.25, hs * 0.25), RAT_PINK,
-			head.CFrame * CFrame.new(0, -hs * 0.05, -head.Size.Z * 0.55), Enum.PartType.Ball, char, head)
-	end
-	if torso and torso:IsA("BasePart") then
-		local len = torso.Size.Y * 3
-		cosmetic("RatTail", Vector3.new(len, torso.Size.Y * 0.15, torso.Size.Y * 0.15), RAT_PINK,
-			torso.CFrame * CFrame.new(0, -torso.Size.Y * 0.2, torso.Size.Z * 0.5 + len * 0.45)
-				* CFrame.Angles(math.rad(20), 0, 0) * CFrame.Angles(0, math.rad(90), 0),
-			Enum.PartType.Cylinder, char, torso)
-	end
-end
-
 function Character.setup(player: Player, char: Model)
+	if char:GetAttribute("SetupDone") then
+		return
+	end
+	char:SetAttribute("SetupDone", true)
 	local hum = char:WaitForChild("Humanoid", 5) :: Humanoid
 	local hrp = char:WaitForChild("HumanoidRootPart", 5)
 	if not hum or not hrp then
@@ -124,30 +38,32 @@ function Character.setup(player: Player, char: Model)
 	end
 	local st = S.State.get(player)
 
+	-- Rats: swap the avatar for the rigged rat body (RatRig). Setting player.Character
+	-- fires CharacterAdded again, which runs setup on the rat itself.
+	if st.inMatch and st.side == "Rat" and not char:GetAttribute("IsRat") then
+		local rat = S.RatRig.build(player)
+		rat:PivotTo(spawnCFrame("RatSpawn") or char:GetPivot())
+		rat.Parent = workspace
+		player.Character = rat
+		char:Destroy()
+		local ratRoot = rat:FindFirstChild("HumanoidRootPart") :: BasePart
+		pcall(function()
+			ratRoot:SetNetworkOwner(player)
+		end)
+		task.defer(Character.setup, player, rat) -- no-op if CharacterAdded already ran it
+		return
+	end
+
 	hum.Died:Connect(function()
 		S.Round.onDied(player)
 	end)
 	hum.UseJumpPower = true
 
 	if st.inMatch and st.side == "Rat" then
-		hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-		hum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
-		local early = spawnCFrame("RatSpawn")
-		if early then
-			char:PivotTo(early) -- get them out of the lobby right away
-		end
-		Character.applyRatLook(player, char)
-		if not char.Parent then
-			return
-		end
 		hum.MaxHealth = Config.RAT_HEALTH + Stats.add(st, "maxHealthBonus")
 		hum.Health = hum.MaxHealth
-		local cf = spawnCFrame("RatSpawn")
-		if cf then
-			char:PivotTo(cf)
-		end
 		player.CameraMode = Enum.CameraMode.Classic
-		player.CameraMinZoomDistance = 3
+		player.CameraMinZoomDistance = 4
 		player.CameraMaxZoomDistance = 14
 	elseif st.inMatch and st.side == "Home" then
 		hum.MaxHealth = 100

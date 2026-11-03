@@ -1,5 +1,10 @@
 -- Client-only visual effects and the "only rats can see food prompts" rule.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Teams = game:GetService("Teams")
+local TextChatService = game:GetService("TextChatService")
+
+local Fonts = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Fonts"))
 
 local Effects = {}
 local UI
@@ -72,7 +77,32 @@ local function updatePrompts()
 	end
 end
 
+-- Comic font everywhere: our UI, map signs, food labels, chat.
+local function enforceFonts()
+	for _, root in ipairs({ workspace, Players.LocalPlayer:WaitForChild("PlayerGui") }) do
+		for _, d in ipairs(root:GetDescendants()) do
+			Fonts.apply(d)
+		end
+		root.DescendantAdded:Connect(Fonts.apply)
+	end
+	pcall(function()
+		local window = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
+		if window then
+			window.FontFace = Fonts.Body
+		end
+		local bubbles = TextChatService:FindFirstChildOfClass("BubbleChatConfiguration")
+		if bubbles then
+			bubbles.FontFace = Fonts.Body
+		end
+		local bar = TextChatService:FindFirstChildOfClass("ChatInputBarConfiguration")
+		if bar then
+			(bar :: any).FontFace = Fonts.Body
+		end
+	end)
+end
+
 function Effects.start()
+	task.spawn(enforceFonts)
 	task.spawn(function()
 		while true do
 			task.wait(0.3)

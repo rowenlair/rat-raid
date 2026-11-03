@@ -98,7 +98,8 @@ def billboard(textv, color, size=(8, 2), offset=3, max_dist=150, always_on_top=F
             "Name": "Text", "ClassName": "TextLabel",
             "Properties": {
                 "Size": {"UDim2": [[1, 0], [1, 0]]}, "BackgroundTransparency": 1, "Text": textv,
-                "TextScaled": True, "Font": "LuckiestGuy", "TextColor3": color, "TextStrokeTransparency": 0,
+                "TextScaled": True,
+                "FontFace": {"Font": {"family": "rbxasset://fonts/families/ComicNeueAngular.json", "weight": "Bold", "style": "Normal"}}, "TextColor3": color, "TextStrokeTransparency": 0,
             },
         }],
     }

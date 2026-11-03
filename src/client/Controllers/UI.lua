@@ -30,8 +30,10 @@ local C = {
 }
 UI.Colors = C
 
-local TITLE_FONT = Enum.Font.LuckiestGuy
-local BODY_FONT = Enum.Font.FredokaOne
+-- Comic Neue Angular is Roblox's built-in Comic Sans-style font (Comic Sans itself isn't licensed on Roblox).
+local Fonts = require(Shared.Fonts)
+local TITLE_FONT = Fonts.Title
+local BODY_FONT = Fonts.Body
 
 local gui: ScreenGui
 local refs: { [string]: any } = {}
@@ -80,7 +82,8 @@ local function text(props)
 	if props.BackgroundTransparency == nil then
 		props.BackgroundTransparency = 1
 	end
-	props.Font = props.Font or TITLE_FONT
+	props.FontFace = props.Font or TITLE_FONT
+	props.Font = nil
 	props.TextColor3 = props.TextColor3 or C.white
 	if props.TextScaled == nil then
 		props.TextScaled = true
@@ -187,9 +190,12 @@ local function buildHud()
 		Font = BODY_FONT, Parent = top })
 	refs.matchInfo = { bar, refs.lives }
 
-	-- Top right: currencies
-	local wallet = new("Frame", { Size = UDim2.new(0, 190, 0, 70), Position = UDim2.new(0, 10, 0, 56),
-		BackgroundColor3 = C.panel, Parent = gui }, { corner(10), borderStroke(3) })
+	-- Left column (wallet, shop button, lobby panel) stacked by a list layout so they never overlap
+	refs.left = new("Frame", { Name = "LeftColumn", Size = UDim2.new(0, 230, 0, 0), Position = UDim2.new(0, 12, 0, 64),
+		AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, Parent = gui },
+		{ new("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }) })
+	local wallet = new("Frame", { Name = "Wallet", Size = UDim2.new(1, 0, 0, 70), LayoutOrder = 1,
+		BackgroundColor3 = C.panel, Parent = refs.left }, { corner(10), borderStroke(3) })
 	refs.coins = text({ Text = "Coins: 0", Size = UDim2.new(1, -16, 0.5, -4), Position = UDim2.new(0, 8, 0, 4),
 		TextColor3 = C.orange, TextXAlignment = Enum.TextXAlignment.Left, Parent = wallet })
 	refs.crumbs = text({ Text = "Crumbs: 0", Size = UDim2.new(1, -16, 0.5, -4), Position = UDim2.new(0, 8, 0.5, 0),
@@ -232,8 +238,8 @@ end
 -- Lobby panel (side preference + shop button)
 ----------------------------------------------------------------------
 local function buildLobby()
-	local panel = new("Frame", { Name = "Lobby", Size = UDim2.new(0, 230, 0, 250), Position = UDim2.new(0, 10, 0.5, 0),
-		AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = C.panel, Parent = gui }, { corner(12), borderStroke(4) })
+	local panel = new("Frame", { Name = "Lobby", Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 3, BackgroundColor3 = C.panel, Parent = refs.left }, { corner(12), borderStroke(4) })
 	new("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 10),
 		PaddingBottom = UDim.new(0, 10), Parent = panel })
 	new("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, Parent = panel })
@@ -258,7 +264,8 @@ local function buildLobby()
 	refs.lobby = panel
 
 	-- Small shop button that is always available (e.g. during a match)
-	refs.shopMini = button({ Text = "SHOP", Size = UDim2.fromOffset(90, 36), Position = UDim2.new(0, 10, 0, 132), Parent = gui }, function()
+	refs.shopMini = button({ Text = "SHOP", Size = UDim2.new(0, 120, 0, 38), LayoutOrder = 2, Visible = false,
+		Parent = refs.left }, function()
 		UI.openShop(shopSide)
 	end)
 end
@@ -512,6 +519,7 @@ function UI.updateState(state)
 
 	-- Lobby panel
 	refs.lobby.Visible = phase == "Lobby" or (phase == "Select" and not you.side)
+	refs.shopMini.Visible = not refs.lobby.Visible
 
 	-- Auto-open loadout on select phase
 	if phase ~= lastPhase then
@@ -576,6 +584,29 @@ function UI.getState()
 	return lastState
 end
 
+-- Shrink panels on small screens (phones, small windows).
+local function setupScaling()
+	local scales = {}
+	for _, frame in ipairs({ refs.left, refs.shop, refs.toasts, refs.results,
+		gui:FindFirstChild("Top"), gui:FindFirstChild("Bottom") }) do
+		if frame then
+			table.insert(scales, new("UIScale", { Parent = frame }))
+		end
+	end
+	local function apply()
+		local cam = workspace.CurrentCamera
+		local vp = cam and cam.ViewportSize or Vector2.new(1280, 800)
+		local k = math.clamp(math.min(vp.Y / 820, vp.X / 1200), 0.55, 1)
+		for _, sc in ipairs(scales) do
+			sc.Scale = k
+		end
+	end
+	apply()
+	if workspace.CurrentCamera then
+		workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(apply)
+	end
+end
+
 function UI.init()
 	gui = new("ScreenGui", { Name = "RatRaidUI", ResetOnSpawn = false, IgnoreGuiInset = true,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Parent = player:WaitForChild("PlayerGui") })
@@ -583,6 +614,7 @@ function UI.init()
 	buildLobby()
 	buildShop()
 	buildSplash()
+	setupScaling()
 end
 
 return UI

@@ -16,7 +16,7 @@ Config.FOOD_QUOTA = 100
 Config.RAT_LIVES = 5
 
 -- Rats
-Config.RAT_SCALE = 0.35
+-- Rat body shape/size lives in ServerScriptService.Server.Services.RatRig
 Config.RAT_HEALTH = 100
 Config.RAT_WALKSPEED = 22
 Config.RAT_JUMPPOWER = 45

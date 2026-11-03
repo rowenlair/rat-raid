@@ -1479,7 +1479,13 @@
           "BackgroundTransparency": 1,
           "Text": "RAT CAGE",
           "TextScaled": true,
-          "Font": "LuckiestGuy",
+          "FontFace": {
+           "Font": {
+            "family": "rbxasset://fonts/families/ComicNeueAngular.json",
+            "weight": "Bold",
+            "style": "Normal"
+           }
+          },
           "TextColor3": [
            1.0,
            0.35294117647058826,
@@ -2211,7 +2217,13 @@
           "BackgroundTransparency": 1,
           "Text": "RAT DEN",
           "TextScaled": true,
-          "Font": "LuckiestGuy",
+          "FontFace": {
+           "Font": {
+            "family": "rbxasset://fonts/families/ComicNeueAngular.json",
+            "weight": "Bold",
+            "style": "Normal"
+           }
+          },
           "TextColor3": [
            1.0,
            0.8509803921568627,
@@ -2598,7 +2610,13 @@
           "BackgroundTransparency": 1,
           "Text": "RAT RAID!",
           "TextScaled": true,
-          "Font": "LuckiestGuy",
+          "FontFace": {
+           "Font": {
+            "family": "rbxasset://fonts/families/ComicNeueAngular.json",
+            "weight": "Bold",
+            "style": "Normal"
+           }
+          },
           "TextColor3": [
            1.0,
            1.0,

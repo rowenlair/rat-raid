@@ -34,8 +34,12 @@
 
 ## Replacing placeholder art
 - **Furniture:** delete parts in `Map.Furniture` and drop in Creator Store models. **Before keeping any free model, search inside it for `Script`s and delete them.** Free models are the #1 source of backdoors.
-- **Rat character:** edit `Character.applyRatLook` in `Services/Character.lua`. Today it shrinks the avatar and adds ears, a nose and a tail. Swap in your own rat rig there.
+- **Rat character:** rats are a custom four-legged rig built in `Services/RatRig.lua` and animated (run, jump, land, idle, tail) by `Client/Controllers/RatAnimator.lua`.
+  - **Use a Creator Store rat instead** (e.g. "Rat Model"): insert it, delete any Scripts inside, rename it **`RatSkin`**, and move it into **ReplicatedStorage**. It's scaled and welded onto the rat automatically. If it faces the wrong way, add a Number attribute **`YawOffset`** (e.g. 90 or 180) to it. The skin keeps the body bob/lean/jump tilt, but legs only animate on the built-in rat.
 - **Tools:** the builders in `Services/Combat.lua` (`builders.Net`, etc.) make the tool look. Replace them with cloned models from `ServerStorage`.
+
+## Font
+Everything uses **Comic Neue Angular**, Roblox's built-in Comic Sans–style font (real Comic Sans isn't available on Roblox). Change it in one place: `ReplicatedStorage.Shared.Fonts`. Roblox's own menus/leaderboard can't be restyled; chat is.
 
 ## Working in code (optional, recommended)
 This project is a [Rojo](https://rojo.space) project. Edit `src/` in VS Code and run `rojo serve` with the Rojo Studio plugin to live-sync. Run `python3 tools/build_map.py` to regenerate the house, and `rojo build -o "Rat Raid.rbxlx"` to rebuild the place file.

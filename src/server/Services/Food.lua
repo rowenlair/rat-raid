@@ -6,6 +6,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared.Config)
 local Foods = require(Shared.Foods)
 local Stats = require(Shared.Stats)
+local Fonts = require(Shared.Fonts)
 
 local Food = {}
 local S
@@ -102,7 +103,7 @@ local function buildFood(foodId: string, cf: CFrame): Model
 	label.Size = UDim2.fromScale(1, 1)
 	label.BackgroundTransparency = 1
 	label.Text = "+" .. def.points
-	label.Font = Enum.Font.LuckiestGuy
+	label.FontFace = Fonts.Title
 	label.TextScaled = true
 	label.TextColor3 = Color3.fromRGB(255, 225, 70)
 	label.TextStrokeTransparency = 0
@@ -210,11 +211,12 @@ function Food.pickUp(player: Player, model: Model)
 	main.CanCollide = false
 	main.CanQuery = false
 	main.Massless = true
-	local up = head.Size.Y / 2 + math.min(main.Size.X, main.Size.Y, main.Size.Z) / 2
-	main.CFrame = head.CFrame * CFrame.new(0, up, 0) * (main.CFrame - main.Position).Rotation
+	local mount = (char:FindFirstChild("Body") :: BasePart?) or head -- rats carry food on their back
+	local up = mount.Size.Y / 2 + math.min(main.Size.X, main.Size.Y, main.Size.Z) / 2 - 0.1
+	main.CFrame = mount.CFrame * CFrame.new(0, up, 0.2) * (main.CFrame - main.Position).Rotation
 	local weld = Instance.new("WeldConstraint")
 	weld.Name = "CarryWeld"
-	weld.Part0 = head
+	weld.Part0 = mount
 	weld.Part1 = main
 	weld.Parent = main
 	st.carrying = model
